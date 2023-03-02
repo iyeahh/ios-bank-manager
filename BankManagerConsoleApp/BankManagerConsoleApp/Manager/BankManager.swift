@@ -12,21 +12,37 @@ struct BankManager {
     private enum Constants {
         static let minimumValueOfRandomCustomers = 10
         static let maximumValueOfRandomCustomers = 30
-        static let defaultTimespent = 0.7
     }
 
     init() {
-        let bankTeller = BankTeller()
-        self.bank = Bank(bankTellers: [bankTeller])
+        let bankTellers: [WorkType: [BankTeller]] = [
+            .deposit: [
+                BankTeller(id: 1),
+                BankTeller(id: 2)
+            ],
+            .loan: [BankTeller(id: 3)]
+        ]
+
+        self.bank = Bank(bankTellers: bankTellers)
     }
 
     mutating func open() {
+        let openTime = DispatchTime.now()
+
         let customers = generateRandomCustomers()
         bank.visit(customers: customers)
 
-        bank.startWorking()
+        bank.startWorking(completion: {
+            print("BankManager completion")
 
-        ConsoleManager.presentAllTaskFinished(of: customers)
+            let closeTime = DispatchTime.now()
+
+            let nanoTime = closeTime.uptimeNanoseconds - openTime.uptimeNanoseconds
+            let passedTime = Double(nanoTime) / 1_000_000_000
+            let roundedPassedTime = passedTime.round(toPlaces: 2)
+
+            ConsoleManager.presentAllTaskFinished(totalTime: roundedPassedTime, numberOfCustomers: customers.count)
+        })
     }
 
     private func generateRandomCustomers() -> [Customer] {
@@ -35,7 +51,8 @@ struct BankManager {
 
         var customers: [Customer] = []
         for id in 1...randomNumber {
-            customers.append(Customer(id: id, withTimespent: Constants.defaultTimespent))
+            let workType = WorkType.allCases.randomElement() ?? .deposit
+            customers.append(Customer(id: id, workType: workType))
         }
 
         return customers
