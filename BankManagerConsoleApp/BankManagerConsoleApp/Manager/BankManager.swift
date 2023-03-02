@@ -20,7 +20,9 @@ struct BankManager {
                 BankTeller(id: 1),
                 BankTeller(id: 2)
             ],
-            .loan: [BankTeller(id: 3)]
+            .loan: [
+                BankTeller(id: 3)
+            ]
         ]
 
         self.bank = Bank(bankTellers: bankTellers)

@@ -13,6 +13,7 @@ final class Bank {
 
     private var customersQueue: Queue<Customer> = Queue()
     private let bankTellers: [WorkType: [BankTeller]]
+    private var bankTellerAssignIndexCount: [WorkType: Int] = [:]
 
     private var semaphoreByWorkType: [WorkType: DispatchSemaphore] = [:]
     private var dispatchQueueByWorkType: [WorkType: DispatchQueue] = [:]
@@ -25,6 +26,7 @@ final class Bank {
 
         configureSemaphoreByWorkType()
         configureDispatchQueueByWorkType()
+        bankTellerAssignIndexCount = bankTellers.mapValues { _ in 0 }
     }
 
     // MARK: - Actions
@@ -41,6 +43,7 @@ final class Bank {
             assignTask(of: customer)
             customersQueue.dequeue()
         }
+
         notifyAllTaskFinished(completion: completion)
     }
 
@@ -56,28 +59,45 @@ final class Bank {
         let type = customer.workType
         let queue = dispatchQueueByWorkType[type]
         let semaphore = semaphoreByWorkType[type]
-        var bankTeller = self.bankTellers[type]?.first { !$0.isWorking }
+//        var bankTeller = self.bankTellers[type]?.first { !$0.isWorking }
+
+        
+        var bankTeller: BankTeller?
+        DispatchQueue.global().sync {
+            let numberOfBankTeller = numberOfBankTeller(of: type)
+            let index = (bankTellerAssignIndexCount[type] ?? 0) % numberOfBankTeller
+            print("numberOfBankTeller: \(numberOfBankTeller) index: \(index)")
+            bankTeller = bankTellers[type]?[index]
+            bankTellerAssignIndexCount[type] = (bankTellerAssignIndexCount[type] ?? 0) + 1
+            print("type: \(type.rawValue) \(bankTellerAssignIndexCount[type])")
+        }
 
         queue?.async(group: bankDispatchGroup) {
             semaphore?.wait()
             bankTeller?.performTask(of: customer)
             semaphore?.signal()
+
+
         }
     }
 
     // MARK: - Helpers
-    func configureSemaphoreByWorkType() {
+    private func configureSemaphoreByWorkType() {
         semaphoreByWorkType = bankTellers.mapValues({ bankTellers in
             DispatchSemaphore(value: bankTellers.count)
         })
     }
 
-    func configureDispatchQueueByWorkType() {
+    private func configureDispatchQueueByWorkType() {
         bankTellers.forEach { (workType, bankTellers) in
             dispatchQueueByWorkType[workType] = DispatchQueue(
                 label: workType.rawValue,
                 attributes: .concurrent
             )
         }
+    }
+
+    private func numberOfBankTeller(of type: WorkType) -> Int {
+        return bankTellers[type]?.count ?? 0
     }
 }

@@ -12,6 +12,7 @@ struct BankTeller {
     private(set) var isWorking = false
 
     mutating func performTask(of customer: Customer) {
+        print("bankTeller: \(id), \(isWorking)")
         ConsoleManager.presentTaskStarted(of: customer)
         isWorking = true
 
