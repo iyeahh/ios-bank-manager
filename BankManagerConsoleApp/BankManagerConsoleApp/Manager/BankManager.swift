@@ -26,15 +26,13 @@ struct BankManager {
         self.bank = Bank(bankTellers: bankTellers)
     }
 
-    mutating func open() {
+    mutating func open(completion: @escaping () -> Void) {
         let openTime = DispatchTime.now()
 
         let customers = generateRandomCustomers()
         bank.visit(customers: customers)
 
         bank.startWorking(completion: {
-            print("BankManager completion")
-
             let closeTime = DispatchTime.now()
 
             let nanoTime = closeTime.uptimeNanoseconds - openTime.uptimeNanoseconds
@@ -42,6 +40,7 @@ struct BankManager {
             let roundedPassedTime = passedTime.round(toPlaces: 2)
 
             ConsoleManager.presentAllTaskFinished(totalTime: roundedPassedTime, numberOfCustomers: customers.count)
+            completion()
         })
     }
 

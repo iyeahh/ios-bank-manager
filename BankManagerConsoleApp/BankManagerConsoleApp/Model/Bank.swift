@@ -38,17 +38,9 @@ final class Bank {
     func startWorking(completion: @escaping () -> Void) {
         for _ in 0..<customersQueue.count {
             guard let customer = customersQueue.peek else { continue }
-            let type = customer.workType
-
-            switch type {
-            case .loan:
-                work(customer, of: .loan)
-            case .deposit:
-                work(customer, of: .deposit)
-            }
+            assignTask(of: customer)
             customersQueue.dequeue()
         }
-
         notifyAllTaskFinished(completion: completion)
     }
 
@@ -60,7 +52,8 @@ final class Bank {
         }
     }
 
-    private func work(_ customer: Customer, of type: WorkType) {
+    private func assignTask(of customer: Customer) {
+        let type = customer.workType
         let queue = dispatchQueueByWorkType[type]
         let semaphore = semaphoreByWorkType[type]
         var bankTeller = self.bankTellers[type]?.first { !$0.isWorking }

@@ -33,8 +33,9 @@ func execute() {
 
         switch menu {
         case .openBank:
-            bankManager.open()
-            execute()
+            bankManager.open(completion: {
+                execute()
+            })
         case .exit:
             break
         }
@@ -45,3 +46,4 @@ func execute() {
 }
 
 execute()
+dispatchMain()  // TODO: 왜 이렇게 하면 종료되지 않는지 알아보기!
