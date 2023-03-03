@@ -9,15 +9,11 @@ import Foundation
 
 struct BankTeller {
     let id: Int
-    private(set) var isWorking = false
 
-    mutating func performTask(of customer: Customer) {
-        print("bankTeller: \(id), \(isWorking)")
+    func performTask(of customer: Customer) {
+        print("bankTeller: \(id))")
         ConsoleManager.presentTaskStarted(of: customer)
-        isWorking = true
-
         Thread.sleep(forTimeInterval: customer.timespent)
         ConsoleManager.presentTaskFinished(of: customer)
-        isWorking = false
     }
 }

@@ -26,7 +26,6 @@ final class Bank {
 
         configureSemaphoreByWorkType()
         configureDispatchQueueByWorkType()
-        bankTellerAssignIndexCount = bankTellers.mapValues { _ in 0 }
     }
 
     // MARK: - Actions
@@ -48,36 +47,25 @@ final class Bank {
     }
 
     private func notifyAllTaskFinished(completion: @escaping () -> Void) {
-        let queueForGroup = DispatchQueue(label: "업무 종료", attributes: .concurrent)
+//        let queueForGroup = DispatchQueue(label: "업무 종료", attributes: .concurrent)
 
-        bankDispatchGroup.notify(queue: queueForGroup) {
+        bankDispatchGroup.notify(queue: DispatchQueue.main) {
             completion()
         }
     }
 
     private func assignTask(of customer: Customer) {
-        let type = customer.workType
-        let queue = dispatchQueueByWorkType[type]
-        let semaphore = semaphoreByWorkType[type]
-//        var bankTeller = self.bankTellers[type]?.first { !$0.isWorking }
+        let workType = customer.workType
+        let queue = dispatchQueueByWorkType[workType]
+        let semaphore = semaphoreByWorkType[workType]
 
-        
-        var bankTeller: BankTeller?
-        DispatchQueue.global().sync {
-            let numberOfBankTeller = numberOfBankTeller(of: type)
-            let index = (bankTellerAssignIndexCount[type] ?? 0) % numberOfBankTeller
-            print("numberOfBankTeller: \(numberOfBankTeller) index: \(index)")
-            bankTeller = bankTellers[type]?[index]
-            bankTellerAssignIndexCount[type] = (bankTellerAssignIndexCount[type] ?? 0) + 1
-            print("type: \(type.rawValue) \(bankTellerAssignIndexCount[type])")
-        }
+        let bankTeller = bankTellerToAssignTask(of: workType)
+        addBankTellerAssignIndexCount(of: workType)
 
         queue?.async(group: bankDispatchGroup) {
             semaphore?.wait()
             bankTeller?.performTask(of: customer)
             semaphore?.signal()
-
-
         }
     }
 
@@ -95,6 +83,16 @@ final class Bank {
                 attributes: .concurrent
             )
         }
+    }
+
+    private func bankTellerToAssignTask(of type: WorkType) -> BankTeller? {
+        let numberOfBankTeller = numberOfBankTeller(of: type)
+        let index = (bankTellerAssignIndexCount[type] ?? 0) % numberOfBankTeller
+        return bankTellers[type]?[index]
+    }
+
+    private func addBankTellerAssignIndexCount(of type: WorkType) {
+        bankTellerAssignIndexCount[type] = (bankTellerAssignIndexCount[type] ?? 0) + 1
     }
 
     private func numberOfBankTeller(of type: WorkType) -> Int {
