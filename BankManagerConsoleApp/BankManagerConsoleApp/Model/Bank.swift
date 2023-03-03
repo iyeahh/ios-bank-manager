@@ -56,13 +56,13 @@ final class Bank {
 
     private func assignTask(of customer: Customer) {
         let workType = customer.workType
-        let queue = dispatchQueueByWorkType[workType]
+        let dispatchQueue = dispatchQueueByWorkType[workType]
         let semaphore = semaphoreByWorkType[workType]
 
         let bankTeller = bankTellerToAssignTask(of: workType)
         addBankTellerAssignIndexCount(of: workType)
 
-        queue?.async(group: bankDispatchGroup) {
+        dispatchQueue?.async(group: bankDispatchGroup) {
             semaphore?.wait()
             bankTeller?.performTask(of: customer)
             semaphore?.signal()
