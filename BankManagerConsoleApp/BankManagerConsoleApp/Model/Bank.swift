@@ -16,7 +16,6 @@ final class Bank {
     private var bankTellerAssignIndexCount: [WorkType: Int] = [:]
 
     private var semaphoreByWorkType: [WorkType: DispatchSemaphore] = [:]
-    private var dispatchQueueByWorkType: [WorkType: DispatchQueue] = [:]
     private let bankDispatchGroup = DispatchGroup()
 
     // MARK: - Lifecycle
@@ -25,7 +24,6 @@ final class Bank {
         self.bankTellers = bankTellers
 
         configureSemaphoreByWorkType()
-        configureDispatchQueueByWorkType()
     }
 
     // MARK: - Actions
@@ -47,8 +45,6 @@ final class Bank {
     }
 
     private func notifyAllTaskFinished(completion: @escaping () -> Void) {
-//        let queueForGroup = DispatchQueue(label: "업무 종료", attributes: .concurrent)
-
         bankDispatchGroup.notify(queue: DispatchQueue.main) {
             completion()
         }
@@ -56,13 +52,12 @@ final class Bank {
 
     private func assignTask(of customer: Customer) {
         let workType = customer.workType
-        let dispatchQueue = dispatchQueueByWorkType[workType]
         let semaphore = semaphoreByWorkType[workType]
 
         let bankTeller = bankTellerToAssignTask(of: workType)
         addBankTellerAssignIndexCount(of: workType)
 
-        dispatchQueue?.async(group: bankDispatchGroup) {
+        DispatchQueue.global().async(group: bankDispatchGroup) {
             semaphore?.wait()
             bankTeller?.performTask(of: customer)
             semaphore?.signal()
@@ -74,15 +69,6 @@ final class Bank {
         semaphoreByWorkType = bankTellers.mapValues({ bankTellers in
             DispatchSemaphore(value: bankTellers.count)
         })
-    }
-
-    private func configureDispatchQueueByWorkType() {
-        bankTellers.forEach { (workType, bankTellers) in
-            dispatchQueueByWorkType[workType] = DispatchQueue(
-                label: workType.rawValue,
-                attributes: .concurrent
-            )
-        }
     }
 
     private func bankTellerToAssignTask(of type: WorkType) -> BankTeller? {
