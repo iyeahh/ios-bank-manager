@@ -8,6 +8,9 @@ import Foundation
 
 struct BankManager {
     private var bank: Bank
+    var checkFinished: Bool {
+        bank.isFinished
+    }
 
     private enum Constants {
         static let minimumValueOfRandomCustomers = 10
@@ -16,8 +19,10 @@ struct BankManager {
     }
 
     init() {
-        let bankTeller = BankTeller()
-        self.bank = Bank(bankTellers: [bankTeller])
+        let depositBankTeller1 = BankTeller(myWorkType: .deposit)
+        let depositBankTeller2 = BankTeller(myWorkType: .deposit)
+        let loanBankTeller = BankTeller(myWorkType: .loan)
+        self.bank = Bank(bankTellers: [depositBankTeller1, depositBankTeller2, loanBankTeller])
     }
 
     mutating func open() {
@@ -25,6 +30,10 @@ struct BankManager {
         bank.visit(customers: customers)
 
         bank.startWorking()
+
+        while !checkFinished {
+
+        }
 
         ConsoleManager.presentAllTaskFinished(of: customers)
     }
@@ -35,7 +44,8 @@ struct BankManager {
 
         var customers: [Customer] = []
         for id in 1...randomNumber {
-            customers.append(Customer(id: id, withTimespent: Constants.defaultTimespent))
+            let customer = Customer(id: id, workType: BankTaskType.allCases.randomElement() ?? .deposit)
+            customers.append(customer)
         }
 
         return customers
