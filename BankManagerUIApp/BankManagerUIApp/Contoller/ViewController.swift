@@ -139,15 +139,15 @@ final class ViewController: UIViewController {
             workingStackView.widthAnchor.constraint(equalToConstant: view.frame.width / 2)
         ])
 
-        let testLabel1 = UILabel()
-        testLabel1.textColor = .black
-        testLabel1.text = "5 - 예금"
-        waitingStackView.addArrangedSubview(testLabel1)
+        let label1 = CustomerStatusLabel(
+            customer: Customer(id: 0, workType: .deposit)
+        )
+        waitingStackView.addArrangedSubview(label1)
 
-        let testLabel2 = UILabel()
-        testLabel2.textColor = .black
-        testLabel2.text = "2 - 예금"
-        workingStackView.addArrangedSubview(testLabel2)
+        let label2 = CustomerStatusLabel(
+            customer: Customer(id: 1, workType: .loan)
+        )
+        workingStackView.addArrangedSubview(label2)
     }
 }
 
