@@ -6,7 +6,7 @@
 
 import Foundation
 
-struct BankManager {
+public struct BankManager {
 
     // MARK: - Private property
 
