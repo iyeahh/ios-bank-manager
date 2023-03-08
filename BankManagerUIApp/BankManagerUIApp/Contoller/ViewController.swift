@@ -79,6 +79,7 @@ final class ViewController: UIViewController {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.distribution = .fillEqually
+        stack.alignment = .center
         return stack
     }()
 
@@ -86,6 +87,7 @@ final class ViewController: UIViewController {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.distribution = .fillEqually
+        stack.alignment = .center
         return stack
     }()
 
@@ -120,6 +122,32 @@ final class ViewController: UIViewController {
             headerStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
+
+        view.addSubview(waitingStackView)
+        waitingStackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            waitingStackView.topAnchor.constraint(equalTo: headerStackView.bottomAnchor, constant: 8),
+            waitingStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            waitingStackView.widthAnchor.constraint(equalToConstant: view.frame.width / 2)
+        ])
+
+        view.addSubview(workingStackView)
+        workingStackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            workingStackView.topAnchor.constraint(equalTo: headerStackView.bottomAnchor, constant: 8),
+            workingStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            workingStackView.widthAnchor.constraint(equalToConstant: view.frame.width / 2)
+        ])
+
+        let testLabel1 = UILabel()
+        testLabel1.textColor = .black
+        testLabel1.text = "5 - 예금"
+        waitingStackView.addArrangedSubview(testLabel1)
+
+        let testLabel2 = UILabel()
+        testLabel2.textColor = .black
+        testLabel2.text = "2 - 예금"
+        workingStackView.addArrangedSubview(testLabel2)
     }
 }
 
