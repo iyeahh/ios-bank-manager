@@ -12,12 +12,11 @@ final class BankViewController: UIViewController {
 
     private lazy var bank: Bank = {
         let bankTellers = [
-            BankTeller(id: 0, workType: .deposit, presenter: self),
-            BankTeller(id: 1, workType: .deposit, presenter: self),
-            BankTeller(id: 2, workType: .loan, presenter: self)
-            // TODO: 뱅크가 presenter 를 가지게 하는게 나을듯. -> BankTeller가 delegate 로 present를 넘기게끔 처리...
+            BankTeller(id: 0, workType: .deposit),
+            BankTeller(id: 1, workType: .deposit),
+            BankTeller(id: 2, workType: .loan)
         ]
-        return Bank(bankTellers: bankTellers)
+        return Bank(bankTellers: bankTellers, presenter: self)
     }()
 
 //    private lazy var bankManager = BankManager(bank: bank, presenter: self)
@@ -131,14 +130,20 @@ final class BankViewController: UIViewController {
 
 //        guard !isWorking else { return }
 //        print("뱅크 일 시작")
-        bank.startWorking {
-            print("finished")
-        }
+        bank.startWorking()
     }
 
     @objc private func resetAllTasks() {
         customerLabels = []
         lastCustomerID = 1
+
+        workingStackView.subviews.forEach { view in
+            view.removeFromSuperview()
+        }
+        waitingStackView.subviews.forEach { view in
+            view.removeFromSuperview()
+        }
+
         bank.stopWorking() // TODO: 리셋 로직 구현 필요
     }
 
@@ -165,7 +170,11 @@ final class BankViewController: UIViewController {
 
         return customers
     }
+}
 
+// MARK: - Layout
+
+extension BankViewController {
     private func configureLayout() {
         let headerStackView = UIStackView(arrangedSubviews: [
             buttonStackView,
@@ -229,7 +238,7 @@ extension BankViewController: BankPresenterable {
         }
     }
 
-    func presentAllTaskFinished(totalTime: TimeInterval, numberOfCustomers: Int) {
-        print("은행 업무 종료: \(totalTime), \(numberOfCustomers)")
+    func presentAllTaskFinished() {
+        print("은행 업무 종료")
     }
 }

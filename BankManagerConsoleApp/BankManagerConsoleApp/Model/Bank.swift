@@ -11,6 +11,7 @@ final class Bank {
 
     // MARK: - Private property
 
+    private let presenter: BankPresenterable
     private let bankTellers: [BankTeller]
     private let bankWorkDispatchGroup = DispatchGroup()
 
@@ -29,8 +30,12 @@ final class Bank {
 
     // MARK: - Lifecycle
 
-    init(bankTellers: [BankTeller]) {
+    init(
+        bankTellers: [BankTeller],
+        presenter: BankPresenterable
+    ) {
         self.bankTellers = bankTellers
+        self.presenter = presenter
     }
 
     // MARK: - Public
@@ -41,13 +46,15 @@ final class Bank {
         }
     }
 
-    func startWorking(completion: @escaping () -> Void) {
+    func startWorking() {
         bankTellers.forEach { bankTeller in
             DispatchQueue.global().async(group: bankWorkDispatchGroup) {
                 self.assignTask(to: bankTeller)
             }
         }
-        setNotifyAllTaskFinished(completion: completion)
+        setNotifyAllTaskFinished(completion: {
+            self.presenter.presentAllTaskFinished()
+        })
     }
 
     func stopWorking() {
@@ -57,15 +64,13 @@ final class Bank {
     // MARK: - Private
 
     private func assignTask(to bankTeller: BankTeller) {
-        guard let queue = self.customerQueueByWorkType[bankTeller.workType],
-              let semaphore = semaphoreByWorkType[bankTeller.workType] else { return }
-
-        while !queue.isEmpty {
-            semaphore.wait()
-            guard let customer = queue.dequeue() else { return }
-            semaphore.signal()
-
-            bankTeller.performTask(of: customer)
+        let queue = self.customerQueueByWorkType[bankTeller.workType]
+        while let customer = queue?.dequeue() {
+            bankTeller.performTask(
+                of: customer,
+                presenter: self.presenter,
+                group: self.bankWorkDispatchGroup
+            )
         }
     }
 

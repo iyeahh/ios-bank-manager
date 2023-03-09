@@ -10,5 +10,5 @@ import Foundation
 protocol BankPresenterable: AnyObject {
     func presentTaskStarted(of customer: Customer)
     func presentTaskFinished(of customer: Customer)
-    func presentAllTaskFinished(totalTime: TimeInterval, numberOfCustomers: Int)
+    func presentAllTaskFinished()
 }
