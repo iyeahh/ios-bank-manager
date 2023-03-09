@@ -1,16 +1,29 @@
 //
-//  BankManagerUIApp - ViewController.swift
+//  BankManagerUIApp - BankViewController.swift
 //  Created by yagom. 
 //  Copyright © yagom academy. All rights reserved.
 // 
 
 import UIKit
 
-final class ViewController: UIViewController {
+final class BankViewController: UIViewController {
 
     // MARK: - Properties
 
-    private lazy var bankManager = BankManager(presenter: self)
+    private lazy var bank: Bank = {
+        let bankTellers = [
+            BankTeller(id: 0, workType: .deposit, presenter: self),
+            BankTeller(id: 1, workType: .deposit, presenter: self),
+            BankTeller(id: 2, workType: .loan, presenter: self)
+            // TODO: 뱅크가 presenter 를 가지게 하는게 나을듯. -> BankTeller가 delegate 로 present를 넘기게끔 처리...
+        ]
+        return Bank(bankTellers: bankTellers)
+    }()
+
+//    private lazy var bankManager = BankManager(bank: bank, presenter: self)
+
+    private var lastCustomerID: Int = 1
+    private var isWorking = false
 
     private enum Constants {
         static let addCustomerButtonTitle: String = "고객 10명 추가"
@@ -96,8 +109,10 @@ final class ViewController: UIViewController {
         return stack
     }()
 
+    private var customerLabels: [CustomerStatusLabel] = []
 
     // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -109,18 +124,47 @@ final class ViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func addCustomers() {
-        print("addCustomers")
-        bankManager.open {
-            print("다 끝남")
+        let customers = generateVisitCustomers()
+
+        bank.visit(customers: customers)
+        updateViews(addedCustomers: customers)
+
+//        guard !isWorking else { return }
+//        print("뱅크 일 시작")
+        bank.startWorking {
+            print("finished")
         }
     }
 
     @objc private func resetAllTasks() {
-        print("resetAllTasks")
+        customerLabels = []
+        lastCustomerID = 1
+        bank.stopWorking() // TODO: 리셋 로직 구현 필요
     }
 
 
     // MARK: - Private
+
+    private func updateViews(addedCustomers: [Customer]) {
+        addedCustomers
+            .map { CustomerStatusLabel(customer: $0) }
+            .forEach { customerLabel in
+                waitingStackView.addArrangedSubview(customerLabel)
+                customerLabels.append(customerLabel)
+            }
+    }
+
+    private func generateVisitCustomers() -> [Customer] {
+        let customers = (lastCustomerID...(lastCustomerID + 9))
+            .map {
+                let workType = WorkType.allCases.randomElement() ?? .deposit
+                return Customer(id: $0, workType: workType)
+            }
+
+        lastCustomerID += 10
+
+        return customers
+    }
 
     private func configureLayout() {
         let headerStackView = UIStackView(arrangedSubviews: [
@@ -155,34 +199,37 @@ final class ViewController: UIViewController {
             workingStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             workingStackView.widthAnchor.constraint(equalToConstant: view.frame.width / 2)
         ])
-
-        let label1 = CustomerStatusLabel(
-            customer: Customer(id: 0, workType: .deposit)
-        )
-        waitingStackView.addArrangedSubview(label1)
-
-        let label2 = CustomerStatusLabel(
-            customer: Customer(id: 1, workType: .loan)
-        )
-        workingStackView.addArrangedSubview(label2)
     }
 }
 
 // MARK: - BankPresenterable
-extension ViewController: BankPresenterable {
-    func presentUserMenu() {
-        print("presentUserMenu")
-    }
-
+extension BankViewController: BankPresenterable {
     func presentTaskStarted(of customer: Customer) {
-        print("presentTaskStarted")
+        print("고객 업무 시작 \(customer.id) \(customer.workType.rawValue)")
+
+        guard let customerLabel = customerLabels.first(where: {
+            $0.customer.id == customer.id
+        }) else { return }
+
+        DispatchQueue.main.async { [weak self] in
+            customerLabel.removeFromSuperview()
+            self?.workingStackView.addArrangedSubview(customerLabel)
+        }
     }
 
     func presentTaskFinished(of customer: Customer) {
-        print("presentTaskFinished")
+        print("고객 업무 종료 \(customer.id) \(customer.workType.rawValue)")
+
+        guard let customerLabel = customerLabels.first(where: {
+            $0.customer.id == customer.id
+        }) else { return }
+
+        DispatchQueue.main.async {
+            customerLabel.removeFromSuperview()
+        }
     }
 
     func presentAllTaskFinished(totalTime: TimeInterval, numberOfCustomers: Int) {
-        print("presentAllTaskFinished")
+        print("은행 업무 종료: \(totalTime), \(numberOfCustomers)")
     }
 }
