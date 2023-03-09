@@ -13,12 +13,14 @@ struct BankTeller {
 
     let id: Int
     let workType: WorkType
+    let presenter: BankPresenterable
+    
 
     // MARK: - Public
 
     func performTask(of customer: Customer) {
-        ConsoleManager.presentTaskStarted(of: customer)
+        presenter.presentTaskStarted(of: customer)
         Thread.sleep(forTimeInterval: customer.timespent)
-        ConsoleManager.presentTaskFinished(of: customer)
+        presenter.presentTaskFinished(of: customer)
     }
 }

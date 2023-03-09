@@ -8,28 +8,33 @@ import UIKit
 
 final class ViewController: UIViewController {
 
-    private enum Constants {
-        static let addCustomerButtonTitle = "고객 10명 추가"
-        static let resetButtonTitle = "초기화"
-        static let workTimeLabelFormText = "업무시간 - "
-        static let waitingStateLabelText = "대기중"
-        static let workingStateLabelText = "업무중"
+    // MARK: - Properties
 
+    private lazy var bankManager = BankManager(presenter: self)
+
+    private enum Constants {
+        static let addCustomerButtonTitle: String = "고객 10명 추가"
+        static let resetButtonTitle: String = "초기화"
+        static let workTimeLabelFormText: String = "업무시간 - "
+        static let waitingStateLabelText: String = "대기중"
+        static let workingStateLabelText: String = "업무중"
     }
 
     // MARK: - UI Properties
 
-    private let addCustomerButton: UIButton = {
+    private lazy var addCustomerButton: UIButton = {
         let button = UIButton()
         button.setTitle(Constants.addCustomerButtonTitle, for: .normal)
         button.setTitleColor(.systemBlue, for: .normal)
+        button.addTarget(self, action: #selector(addCustomers), for: .touchUpInside)
         return button
     }()
 
-    private let resetButton: UIButton = {
+    private lazy var resetButton: UIButton = {
         let button = UIButton()
         button.setTitle(Constants.resetButtonTitle, for: .normal)
         button.setTitleColor(.systemRed, for: .normal)
+        button.addTarget(self, action: #selector(resetAllTasks), for: .touchUpInside)
         return button
     }()
 
@@ -100,7 +105,19 @@ final class ViewController: UIViewController {
         view.backgroundColor = .white
     }
 
-    // MARK: - Public
+
+    // MARK: - Actions
+
+    @objc private func addCustomers() {
+        print("addCustomers")
+        bankManager.open {
+            print("다 끝남")
+        }
+    }
+
+    @objc private func resetAllTasks() {
+        print("resetAllTasks")
+    }
 
 
     // MARK: - Private
@@ -151,3 +168,21 @@ final class ViewController: UIViewController {
     }
 }
 
+// MARK: - BankPresenterable
+extension ViewController: BankPresenterable {
+    func presentUserMenu() {
+        print("presentUserMenu")
+    }
+
+    func presentTaskStarted(of customer: Customer) {
+        print("presentTaskStarted")
+    }
+
+    func presentTaskFinished(of customer: Customer) {
+        print("presentTaskFinished")
+    }
+
+    func presentAllTaskFinished(totalTime: TimeInterval, numberOfCustomers: Int) {
+        print("presentAllTaskFinished")
+    }
+}

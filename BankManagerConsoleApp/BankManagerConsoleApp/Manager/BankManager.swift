@@ -11,6 +11,7 @@ public struct BankManager {
     // MARK: - Private property
 
     private let bank: Bank
+    private let presenter: BankPresenterable
 
     private enum Constants {
         static let minimumValueOfRandomCustomers: Int = 10
@@ -19,14 +20,15 @@ public struct BankManager {
 
     // MARK: - Lifecycle
 
-    init() {
+    init(presenter: BankPresenterable) {
         let bankTellers = [
-            BankTeller(id: 0, workType: .deposit),
-            BankTeller(id: 1, workType: .deposit),
-            BankTeller(id: 2, workType: .loan)
+            BankTeller(id: 0, workType: .deposit, presenter: presenter),
+            BankTeller(id: 1, workType: .deposit, presenter: presenter),
+            BankTeller(id: 2, workType: .loan, presenter: presenter)
         ]
-
         self.bank = Bank(bankTellers: bankTellers)
+
+        self.presenter = presenter
     }
 
     // MARK: - Public
@@ -41,7 +43,7 @@ public struct BankManager {
             let closedTime = DispatchTime.now()
             let totalTime = calculateTotalWorkTime(openedTime: openedTime, closedTime: closedTime)
 
-            ConsoleManager.presentAllTaskFinished(totalTime: totalTime, numberOfCustomers: customers.count)
+            presenter.presentAllTaskFinished(totalTime: totalTime, numberOfCustomers: customers.count)
             completion()
         })
     }
